@@ -1,0 +1,74 @@
+import pandas as pd #loads the dataset in more structured table 
+import numpy as np #helps to create numpy arrays
+import matplotlib.pyplot as plt 
+import seaborn as sns #seaborn and matplotlib are used for data visualization
+from matplotlib import gridspec #A grid layout to place subplots within a figure
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report,accuracy_score
+from sklearn.metrics import precision_score,recall_score
+from sklearn.metrics import f1_score,matthews_corrcoef
+from sklearn.metrics import confusion_matrix
+
+data=pd.read_csv("/Users/abhishek/Downloads/creditcard.csv")
+print(data.head())
+print(data.shape)
+print(data.describe())
+
+
+fraud=data[data['Class']==1]
+valid=data[data['Class']==0]
+outlier_fraction=len(fraud)/float(len(valid))
+print(outlier_fraction)
+print('fraud cases:{}'.format(len(data[data['Class']==1])))
+print('valid cases:{}'.format(len(data[data['Class']==0])))
+
+print("amount details for the fraudulent transaction:")
+print(fraud.Amount.describe())
+print("amount details for thevalid transaction:")
+print(valid.Amount.describe())
+
+
+corrmat = data.corr()
+fig = plt.figure(figsize=(12,9))
+sns.heatmap(corrmat,vmax = .8,square = True)
+plt.show()
+
+X=data.drop(['Class'],axis=1)
+Y=data["Class"]
+print(X.shape)
+print(Y.shape)
+Xdata=X.values
+Ydata=Y.values
+
+xtrain,xtest,ytrain,ytest=train_test_split(Xdata,Ydata,test_size=0.2,random_state=42)
+
+rfc=RandomForestClassifier()
+rfc.fit(xtrain,ytrain)
+
+ypred=rfc.predict(xtest)
+
+n_outliners=len(fraud)
+n_errors=(ypred != ytest).sum()
+print("the model used is random forest classifier")
+acc=accuracy_score(ytest,ypred)
+print("the accuracy score is{}".format(acc))
+prec=precision_score(ytest,ypred)
+print("the precision score is {}".format(prec))
+rec=recall_score(ytest,ypred)
+print("the recall score is {}".format(rec))
+f1=f1_score(ytest,ypred)
+print("the f1 score is {}".format(f1))
+MCC = matthews_corrcoef(ytest,ypred)
+print("The Matthews correlation coefficient is{}".format(MCC))
+
+
+
+LABELS=["normal","fraud"]
+conf_matrix=confusion_matrix(ytest,ypred)
+plt.figure(figsize=(12,12))
+sns.heatmap(conf_matrix,xticklabels = LABELS,yticklabels=LABELS,annot = True,fmt="d");
+plt.title("confusion_matrix")
+plt.ylabel("true class")
+plt.xlabel("predicted class")
+plt.show()
